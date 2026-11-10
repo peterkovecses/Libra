@@ -1,7 +1,6 @@
-@Libra.Api_HostAddress = http://localhost:5159
-@Libra = variable value
+@Host= https://localhost:7109
 
-GET {{Libra.Api_HostAddress}}/weatherforecast/
+GET {{Host}}/api/books/
 Accept: application/json
 
 ###
