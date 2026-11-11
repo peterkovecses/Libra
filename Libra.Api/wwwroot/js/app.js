@@ -1,3 +1,6 @@
+import { renderError } from "./http.js";
+import { removeFeatureStylesheet } from "./stylesheet.js";
+
 const pageContent = document.querySelector("#page-content");
 const breadcrumb = document.querySelector("#breadcrumb");
 const booksLink = document.querySelector("#books-link");
@@ -90,19 +93,10 @@ async function navigate() {
             page.params
         );
     } catch (error) {
-        console.error("Navigation error:", error);
-
         if (navigationId === currentNavigation) {
-            pageContent.textContent =
-                "Unable to load this page. Please try again later.";
+            renderError(pageContent, error, "Unable to load this page. Please try again later.");
         }
     }
-}
-
-function removeFeatureStylesheet() {
-    document
-        .querySelector("[data-feature-stylesheet]")
-        ?.remove();
 }
 
 window.addEventListener("hashchange", navigate);

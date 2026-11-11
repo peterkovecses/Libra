@@ -1,5 +1,8 @@
 
 import { createPagination } from "../../../js/components/pagination/pagination.js";
+import { fetchResponse, renderError, renderState } from "../../../js/http.js";
+import { loadStylesheet } from "../../../js/stylesheet.js";
+import { validateBooksPage } from "../common/validation/book-validation.js";
 
 const htmlUrl = new URL("./get-books.html", import.meta.url);
 const cssUrl = new URL("./get-books.css", import.meta.url);
@@ -8,13 +11,7 @@ const DEFAULT_PAGE_NUMBER = 1;
 const DEFAULT_PAGE_SIZE = 10;
 
 export async function load(container, isCurrent = () => true) {
-    const response = await fetch(htmlUrl);
-
-    if (!response.ok) {
-        throw new Error(
-            `Failed to load GetBooks HTML (${response.status})`
-        );
-    }
+    const response = await fetchResponse(htmlUrl);
 
     const html = await response.text();
 
@@ -22,7 +19,7 @@ export async function load(container, isCurrent = () => true) {
         return;
     }
 
-    await loadStylesheet();
+    await loadStylesheet(cssUrl, { feature: true, isCurrent });
 
     if (!isCurrent()) {
         return;
@@ -84,43 +81,6 @@ export async function load(container, isCurrent = () => true) {
     );
 }
 
-async function loadStylesheet() {
-    const existingStylesheet = document.querySelector(
-        "[data-feature-stylesheet]"
-    );
-
-    if (existingStylesheet?.href === cssUrl.href) {
-        return;
-    }
-
-    existingStylesheet?.remove();
-
-    const stylesheet = document.createElement("link");
-
-    stylesheet.rel = "stylesheet";
-    stylesheet.href = cssUrl.href;
-    stylesheet.dataset.featureStylesheet = "";
-
-    const loaded = new Promise((resolve, reject) => {
-        stylesheet.onload = resolve;
-
-        stylesheet.onerror = () => {
-            reject(
-                new Error("Failed to load GetBooks stylesheet.")
-            );
-        };
-    });
-
-    document.head.appendChild(stylesheet);
-
-    try {
-        await loaded;
-    } catch (error) {
-        stylesheet.remove();
-        throw error;
-    }
-}
-
 async function loadBooks(
     booksContainer,
     bookCount,
@@ -131,6 +91,9 @@ async function loadBooks(
     pageSize
 ) {
     const requestId = ++requestState.currentRequestId;
+    pagination.update({ loading: true });
+    bookCount.textContent = "Loading...";
+    renderState(booksContainer, "Loading books...");
 
     try {
         const params = new URLSearchParams({
@@ -138,44 +101,38 @@ async function loadBooks(
             pageSize: pageSize.toString()
         });
 
-        const response = await fetch(`/api/books?${params}`);
-
-        if (!response.ok) {
-            throw new Error(
-                `Failed to load books (${response.status})`
-            );
-        }
-
-        const data = await response.json();
+        const response = await fetchResponse(`/api/books?${params}`);
+        const data = validateBooksPage(await response.json(), pageNumber, pageSize);
 
         if (!isCurrent() || requestId !== requestState.currentRequestId) {
             return;
         }
 
-        if (
-            !data ||
-            !Array.isArray(data.items) ||
-            !Number.isInteger(data.totalCount) ||
-            !Number.isInteger(data.pageNumber) ||
-            !Number.isInteger(data.pageSize) ||
-            !Number.isInteger(data.totalPages) ||
-            typeof data.hasPreviousPage !== "boolean" ||
-            typeof data.hasNextPage !== "boolean"
-        ) {
-            throw new Error("Invalid paginated books response.");
+        if (data.pageNumber > Math.max(1, data.totalPages)) {
+            return await loadBooks(
+                booksContainer, bookCount, pagination, requestState,
+                isCurrent, Math.max(1, data.totalPages), pageSize
+            );
         }
 
         renderBooks(data, booksContainer, bookCount);
 
-        pagination.update(data);
+        pagination.update({ ...data, loading: false });
     } catch (error) {
         if (!isCurrent() || requestId !== requestState.currentRequestId) {
             return;
         }
 
-        console.error("Error loading books:", error);
-
-        renderError(booksContainer, bookCount);
+        bookCount.textContent = "Unavailable";
+        renderError(
+            booksContainer,
+            error,
+            "Unable to load books. Please try again.",
+            () => loadBooks(
+                booksContainer, bookCount, pagination, requestState,
+                isCurrent, pageNumber, pageSize
+            )
+        );
     }
 }
 
@@ -259,26 +216,4 @@ function renderBooks(data, container, bookCount) {
     wrapper.appendChild(table);
 
     container.replaceChildren(wrapper);
-}
-
-function renderState(container, message, isError = false) {
-    const element = document.createElement("div");
-
-    element.className = isError
-        ? "state-message error"
-        : "state-message";
-
-    element.textContent = message;
-
-    container.replaceChildren(element);
-}
-
-function renderError(container, bookCount) {
-    renderState(
-        container,
-        "Unable to load books. Please try again later.",
-        true
-    );
-
-    bookCount.textContent = "Unavailable";
 }

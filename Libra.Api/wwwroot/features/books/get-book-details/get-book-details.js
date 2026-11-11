@@ -1,3 +1,7 @@
+import { fetchResponse, HttpError, renderError, renderState } from "../../../js/http.js";
+import { loadStylesheet } from "../../../js/stylesheet.js";
+import { validateBook } from "../common/validation/book-validation.js";
+
 const htmlUrl = new URL("./get-book-details.html", import.meta.url);
 const cssUrl = new URL("./get-book-details.css", import.meta.url);
 
@@ -5,71 +9,25 @@ export async function load(container, isCurrent = () => true, params = {}) {
     const { bookId } = params;
 
     if (!Number.isInteger(bookId) || bookId <= 0) {
-        renderError(container, "Invalid book ID.");
+        renderError(container, new Error("Invalid book ID."), "Invalid book ID.");
         return;
     }
 
-    try {
-        const [htmlResponse] = await Promise.all([
-            fetch(htmlUrl)
-        ]);
+    const htmlResponse = await fetchResponse(htmlUrl);
+    const html = await htmlResponse.text();
 
-        if (!htmlResponse.ok) {
-            throw new Error("Unable to load book details page.");
-        }
-
-        const html = await htmlResponse.text();
-
-        if (!isCurrent()) {
-            return;
-        }
-
-        await loadStylesheet();
-
-        if (!isCurrent()) {
-            return;
-        }
-
-        container.innerHTML = html;
-
-        await loadBook(bookId, container, isCurrent);
-    } catch (error) {
-        console.error("Book details page error:", error);
-
-        if (isCurrent()) {
-            renderError(
-                container,
-                "Unable to load this page. Please try again later."
-            );
-        }
-    }
-}
-
-async function loadStylesheet() {
-    const existingStylesheet = document.querySelector(
-        "[data-feature-stylesheet]"
-    );
-
-    if (existingStylesheet) {
-        existingStylesheet.remove();
+    if (!isCurrent()) {
+        return;
     }
 
-    const stylesheet = document.createElement("link");
+    await loadStylesheet(cssUrl, { feature: true, isCurrent });
 
-    stylesheet.rel = "stylesheet";
-    stylesheet.href = cssUrl;
-    stylesheet.dataset.featureStylesheet = "";
+    if (!isCurrent()) {
+        return;
+    }
 
-    document.head.appendChild(stylesheet);
-
-    await new Promise((resolve, reject) => {
-        stylesheet.addEventListener("load", resolve, { once: true });
-        stylesheet.addEventListener(
-            "error",
-            () => reject(new Error("Unable to load feature stylesheet.")),
-            { once: true }
-        );
-    });
+    container.innerHTML = html;
+    await loadBook(bookId, container, isCurrent);
 }
 
 async function loadBook(bookId, container, isCurrent) {
@@ -78,36 +36,26 @@ async function loadBook(bookId, container, isCurrent) {
     );
 
     try {
-        const response = await fetch(`/api/books/${bookId}`);
-
-        if (!isCurrent()) {
-            return;
-        }
-
-        if (response.status === 404) {
-            renderState(detailsContainer, "Book not found.");
-            return;
-        }
-
-        if (!response.ok) {
-            throw new Error(`Request failed with status ${response.status}.`);
-        }
-
-        const book = await response.json();
+        const response = await fetchResponse(`/api/books/${bookId}`);
+        const book = validateBook(await response.json(), bookId);
 
         if (!isCurrent()) {
             return;
         }
 
         renderBook(detailsContainer, book);
+        container.querySelector(".panel-actions").hidden = false;
     } catch (error) {
-        console.error("Unable to load book:", error);
-
         if (isCurrent()) {
-            renderError(
-                detailsContainer,
-                "Unable to load book details. Please try again later."
-            );
+            if (error instanceof HttpError && error.status === 404) {
+                renderState(detailsContainer, "Book not found. (HTTP 404)");
+            } else {
+                renderError(
+                    detailsContainer,
+                    error,
+                    "Unable to load book details. Please try again later."
+                );
+            }
         }
     }
 }
@@ -167,16 +115,4 @@ function appendDetail(container, label, value, valueClass = "") {
     valueElement.textContent = value ?? "";
 
     container.append(labelElement, valueElement);
-}
-
-function renderState(container, message) {
-    const element = document.createElement("p");
-    element.className = "state-message";
-    element.textContent = message;
-
-    container.replaceChildren(element);
-}
-
-function renderError(container, message) {
-    renderState(container, message);
 }

@@ -1,12 +1,12 @@
 
+import { loadStylesheet } from "../../stylesheet.js";
+
 const cssUrl = new URL("./pagination.css", import.meta.url);
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50];
 
-let stylesheetPromise;
-
 export async function createPagination(container, options) {
-    await loadStylesheet();
+    await loadStylesheet(cssUrl);
 
     const state = {
         pageNumber: 1,
@@ -15,6 +15,7 @@ export async function createPagination(container, options) {
         totalPages: 0,
         hasPreviousPage: false,
         hasNextPage: false,
+        loading: false,
         ...options
     };
 
@@ -104,10 +105,11 @@ export async function createPagination(container, options) {
 
         pageSizeSelect.value = state.pageSize;
 
-        previousButton.disabled = !state.hasPreviousPage;
-        nextButton.disabled = !state.hasNextPage;
+        previousButton.disabled = state.loading || !state.hasPreviousPage;
+        nextButton.disabled = state.loading || !state.hasNextPage;
+        pageSizeSelect.disabled = state.loading;
 
-        container.hidden = state.totalCount === 0;
+        container.hidden = state.loading || state.totalCount === 0;
     }
 
     function update(data) {
@@ -116,7 +118,7 @@ export async function createPagination(container, options) {
     }
 
     function goToPage(pageNumber, pageSize = state.pageSize) {
-        if (pageNumber < 1 || pageNumber > state.totalPages) {
+        if (state.loading || pageNumber < 1 || pageNumber > state.totalPages) {
             return;
         }
 
@@ -127,6 +129,7 @@ export async function createPagination(container, options) {
             return;
         }
 
+        render();
         options.onPageChange({
             pageNumber,
             pageSize
@@ -156,45 +159,4 @@ export async function createPagination(container, options) {
             root.remove();
         }
     };
-}
-
-async function loadStylesheet() {
-    if (stylesheetPromise) {
-        return stylesheetPromise;
-    }
-
-    const existingStylesheet = document.querySelector(
-        '[data-component-stylesheet="pagination"]'
-    );
-
-    if (existingStylesheet) {
-        return;
-    }
-
-    const stylesheet = document.createElement("link");
-
-    stylesheet.rel = "stylesheet";
-    stylesheet.href = cssUrl.href;
-    stylesheet.dataset.componentStylesheet = "pagination";
-
-    stylesheetPromise = new Promise((resolve, reject) => {
-        stylesheet.onload = resolve;
-
-        stylesheet.onerror = () => {
-            stylesheet.remove();
-
-            reject(
-                new Error("Failed to load Pagination stylesheet.")
-            );
-        };
-    });
-
-    document.head.appendChild(stylesheet);
-
-    try {
-        await stylesheetPromise;
-    } catch (error) {
-        stylesheetPromise = undefined;
-        throw error;
-    }
 }
