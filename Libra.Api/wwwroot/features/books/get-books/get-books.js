@@ -1,6 +1,11 @@
 
+import { createPagination } from "../../../js/components/pagination/pagination.js";
+
 const htmlUrl = new URL("./get-books.html", import.meta.url);
 const cssUrl = new URL("./get-books.css", import.meta.url);
+
+const DEFAULT_PAGE_NUMBER = 1;
+const DEFAULT_PAGE_SIZE = 10;
 
 export async function load(container, isCurrent = () => true) {
     const response = await fetch(htmlUrl);
@@ -25,7 +30,58 @@ export async function load(container, isCurrent = () => true) {
 
     container.innerHTML = html;
 
-    await loadBooks(container, isCurrent);
+    const booksContainer = container.querySelector(
+        "#books-container"
+    );
+
+    const paginationContainer = container.querySelector(
+        "#pagination-container"
+    );
+
+    const bookCount = container.querySelector("#book-count");
+
+    const requestState = {
+        currentRequestId: 0
+    };
+
+    const pagination = await createPagination(
+        paginationContainer,
+        {
+            pageNumber: DEFAULT_PAGE_NUMBER,
+            pageSize: DEFAULT_PAGE_SIZE,
+            totalCount: 0,
+            totalPages: 0,
+            hasPreviousPage: false,
+            hasNextPage: false,
+
+            onPageChange: ({ pageNumber, pageSize }) => {
+                loadBooks(
+                    booksContainer,
+                    bookCount,
+                    pagination,
+                    requestState,
+                    isCurrent,
+                    pageNumber,
+                    pageSize
+                );
+            }
+        }
+    );
+
+    if (!isCurrent()) {
+        pagination.destroy();
+        return;
+    }
+
+    await loadBooks(
+        booksContainer,
+        bookCount,
+        pagination,
+        requestState,
+        isCurrent,
+        DEFAULT_PAGE_NUMBER,
+        DEFAULT_PAGE_SIZE
+    );
 }
 
 async function loadStylesheet() {
@@ -65,15 +121,24 @@ async function loadStylesheet() {
     }
 }
 
-async function loadBooks(container, isCurrent) {
-    const booksContainer = container.querySelector(
-        "#books-container"
-    );
-
-    const bookCount = container.querySelector("#book-count");
+async function loadBooks(
+    booksContainer,
+    bookCount,
+    pagination,
+    requestState,
+    isCurrent,
+    pageNumber,
+    pageSize
+) {
+    const requestId = ++requestState.currentRequestId;
 
     try {
-        const response = await fetch("/api/books");
+        const params = new URLSearchParams({
+            pageNumber: pageNumber.toString(),
+            pageSize: pageSize.toString()
+        });
+
+        const response = await fetch(`/api/books?${params}`);
 
         if (!response.ok) {
             throw new Error(
@@ -81,19 +146,30 @@ async function loadBooks(container, isCurrent) {
             );
         }
 
-        const books = await response.json();
+        const data = await response.json();
 
-        if (!isCurrent()) {
+        if (!isCurrent() || requestId !== requestState.currentRequestId) {
             return;
         }
 
-        if (!Array.isArray(books)) {
-            throw new Error("Invalid books response.");
+        if (
+            !data ||
+            !Array.isArray(data.items) ||
+            !Number.isInteger(data.totalCount) ||
+            !Number.isInteger(data.pageNumber) ||
+            !Number.isInteger(data.pageSize) ||
+            !Number.isInteger(data.totalPages) ||
+            typeof data.hasPreviousPage !== "boolean" ||
+            typeof data.hasNextPage !== "boolean"
+        ) {
+            throw new Error("Invalid paginated books response.");
         }
 
-        renderBooks(books, booksContainer, bookCount);
+        renderBooks(data, booksContainer, bookCount);
+
+        pagination.update(data);
     } catch (error) {
-        if (!isCurrent()) {
+        if (!isCurrent() || requestId !== requestState.currentRequestId) {
             return;
         }
 
@@ -103,10 +179,12 @@ async function loadBooks(container, isCurrent) {
     }
 }
 
-function renderBooks(books, container, bookCount) {
-    bookCount.textContent = `${books.length} books`;
+function renderBooks(data, container, bookCount) {
+    const { items, totalCount } = data;
 
-    if (books.length === 0) {
+    bookCount.textContent = `${totalCount} books`;
+
+    if (items.length === 0) {
         renderState(
             container,
             "No books found in the library."
@@ -123,6 +201,7 @@ function renderBooks(books, container, bookCount) {
 
     for (const label of ["ID", "Title", "Authors"]) {
         const th = document.createElement("th");
+
         th.textContent = label;
 
         headerRow.appendChild(th);
@@ -133,7 +212,7 @@ function renderBooks(books, container, bookCount) {
 
     const tbody = document.createElement("tbody");
 
-    for (const book of books) {
+    for (const book of items) {
         const row = document.createElement("tr");
 
         const idCell = document.createElement("td");
