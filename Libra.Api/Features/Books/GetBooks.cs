@@ -34,29 +34,24 @@ public sealed class GetBooksHandler(IDbConnectionFactory connectionFactory)
         await using var connection =
             await connectionFactory.OpenConnectionAsync(cancellationToken);
 
-        var totalCount = await connection.ExecuteScalarAsync<int>(
-            new CommandDefinition(
-                "SELECT COUNT(*) FROM Books;",
-                cancellationToken: cancellationToken));
-
         var sql = CreateSql();
 
-        var books = await GetBooksAsync(
+        return await GetBooksAsync(
             connection,
             sql,
             parameters,
+            pagination,
             cancellationToken);
-
-        return new PaginatedList<Book>(
-            books,
-            totalCount,
-            pagination.PageNumber,
-            pagination.PageSize);
     }
 
     private static string CreateSql() =>
         """
-        WITH PagedBooks AS
+        WITH BookCount AS
+        (
+            SELECT COUNT(*) AS TotalCount
+            FROM Books
+        ),
+        PagedBooks AS
         (
             SELECT Id, Title
             FROM Books
@@ -64,26 +59,30 @@ public sealed class GetBooksHandler(IDbConnectionFactory connectionFactory)
             LIMIT @PageSize OFFSET @Offset
         )
         SELECT
+            c.TotalCount,
             b.Id,
             b.Title,
             a.Id,
             a.Name
-        FROM PagedBooks b
+        FROM BookCount c
+        LEFT JOIN PagedBooks b ON 1 = 1
         LEFT JOIN BookAuthors ba ON ba.BookId = b.Id
         LEFT JOIN Authors a ON a.Id = ba.AuthorId
         ORDER BY b.Title, b.Id, a.Name;
         """;
 
-    private static async Task<List<Book>> GetBooksAsync(
+    private static async Task<PaginatedList<Book>> GetBooksAsync(
         DbConnection connection,
         string sql,
         object parameters,
+        Pagination pagination,
         CancellationToken cancellationToken) =>
-        await connection.QueryWithChildrenAsync<Book, Author, int>(
+        await connection.QueryPaginatedWithChildrenAsync<Book, Author, int>(
             new CommandDefinition(
                 sql,
                 parameters,
                 cancellationToken: cancellationToken),
+            pagination,
             parentKeySelector: b => b.Id,
             addChildAction: (book, author) =>
             {

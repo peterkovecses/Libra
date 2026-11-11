@@ -3,3 +3,13 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Local SQLite database and journal files
+/Libra.Api/App_Data/libra.db
+/Libra.Api/App_Data/libra.db-journal
+/Libra.Api/App_Data/libra.db-shm
+/Libra.Api/App_Data/libra.db-wal

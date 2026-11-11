@@ -59,6 +59,9 @@ internal static class SqliteSchema
                                          REFERENCES Members(Id)
                                  );
 
+                                 CREATE INDEX IF NOT EXISTS IX_Books_Title_Id
+                                     ON Books(Title, Id);
+
                                  CREATE INDEX IF NOT EXISTS IX_BookCopies_BookId
                                      ON BookCopies(BookId);
 
