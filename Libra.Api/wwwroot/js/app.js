@@ -1,4 +1,3 @@
-
 const pageContent = document.querySelector("#page-content");
 const breadcrumb = document.querySelector("#breadcrumb");
 const booksLink = document.querySelector("#books-link");
@@ -12,6 +11,32 @@ const routes = {
         load: () => import("../features/books/get-books/get-books.js")
     }
 };
+
+function resolveRoute(route) {
+    const exactRoute = routes[route];
+
+    if (exactRoute) {
+        return {
+            ...exactRoute,
+            params: {}
+        };
+    }
+
+    const bookDetailsMatch = route.match(/^\/books\/(\d+)$/);
+
+    if (bookDetailsMatch) {
+        return {
+            breadcrumb: "Library / Books / Book Details",
+            link: booksLink,
+            load: () => import("../features/books/get-book-details/get-book-details.js"),
+            params: {
+                bookId: Number(bookDetailsMatch[1])
+            }
+        };
+    }
+
+    return null;
+}
 
 async function navigate() {
     const navigationId = ++currentNavigation;
@@ -32,7 +57,7 @@ async function navigate() {
         return;
     }
 
-    const page = routes[route];
+    const page = resolveRoute(route);
 
     // Unknown route.
     if (!page) {
@@ -61,7 +86,8 @@ async function navigate() {
 
         await feature.load(
             pageContent,
-            () => navigationId === currentNavigation
+            () => navigationId === currentNavigation,
+            page.params
         );
     } catch (error) {
         console.error("Navigation error:", error);

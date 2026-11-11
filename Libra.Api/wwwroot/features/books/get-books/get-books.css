@@ -86,8 +86,17 @@
     font-size: 13px;
 }
 
-.books-table tbody tr:hover {
+.books-table tbody tr.book-row {
+    cursor: pointer;
+}
+
+.books-table tbody tr.book-row:hover > * {
     background: #fafbff;
+}
+
+.books-table tbody tr.book-row:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
 }
 
 .book-title {

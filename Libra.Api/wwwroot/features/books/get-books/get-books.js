@@ -215,6 +215,24 @@ function renderBooks(data, container, bookCount) {
     for (const book of items) {
         const row = document.createElement("tr");
 
+        row.classList.add("book-row");
+        row.tabIndex = 0;
+        row.setAttribute("role", "link");
+        row.setAttribute("aria-label", `View details for ${book.title}`);
+
+        const navigateToBook = () => {
+            location.hash = `/books/${book.id}`;
+        };
+
+        row.addEventListener("click", navigateToBook);
+
+        row.addEventListener("keydown", event => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                navigateToBook();
+            }
+        });
+
         const idCell = document.createElement("td");
         idCell.className = "book-id";
         idCell.textContent = `#${book.id}`;
