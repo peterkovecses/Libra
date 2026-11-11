@@ -1,5 +1,7 @@
 global using Libra.Api;
+global using Libra.Api.Common.ErrorHandling;
 global using Libra.Api.Common.Extensions;
+global using Libra.Api.Common.Validation;
 global using Libra.Api.Contracts;
 global using Libra.Api.Domain.Models;
 global using Libra.Api.Features.Books;
@@ -8,7 +10,8 @@ global using Libra.Api.Infrastructure.Persistence;
 global using Libra.Api.Infrastructure.Persistence.Extensions;
 global using System.Data;
 global using System.Data.Common;
+global using Microsoft.AspNetCore.Diagnostics;
+global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Data.Sqlite;
 global using Dapper;
-
-
+global using FluentValidation;

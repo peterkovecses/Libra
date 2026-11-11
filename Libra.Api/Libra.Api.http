@@ -1,6 +1,29 @@
-@Host= https://localhost:7109
 
-GET {{Host}}/api/books/
+@Host = https://localhost:7109
+
+### Get all books
+GET {{Host}}/api/books
 Accept: application/json
 
-###
+### Get book by ID - valid ID
+GET {{Host}}/api/books/1
+Accept: application/json
+
+### Get book by ID - non-existing ID
+GET {{Host}}/api/books/999
+Accept: application/json
+
+### Get book by ID - non-integer ID (model binding error)
+# Expected: 400 Bad Request
+GET {{Host}}/api/books/aaa
+Accept: application/json
+
+### Get book by ID - zero ID (validation error)
+# Expected: 400 Bad Request
+GET {{Host}}/api/books/0
+Accept: application/json
+
+### Get book by ID - negative ID (validation error)
+# Expected: 400 Bad Request
+GET {{Host}}/api/books/-1
+Accept: application/json

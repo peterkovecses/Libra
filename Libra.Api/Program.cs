@@ -1,4 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
+builder.AddErrorHandling();
 builder.Services.AddApiServices();
 builder.Services.AddInfrastructure(
     builder.Environment.ContentRootPath);
@@ -13,6 +14,7 @@ await using (var scope = app.Services.CreateAsyncScope())
     await initializer.InitializeAsync();
 }
 
+app.UseErrorHandling();
 app.UseHttpsRedirection();
 app.UseDefaultFiles();
 app.UseStaticFiles();

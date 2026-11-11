@@ -8,6 +8,7 @@ public static class EndpointExtensions
             .WithTags("Book");
 
         GetBooksEndpoint.MapEndpoint(bookGroup);
+        GetBookByIdEndpoint.MapEndpoint(bookGroup);
         
         return app;
     }
