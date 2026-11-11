@@ -1,6 +1,7 @@
 global using Libra.Api;
 global using Libra.Api.Common.ErrorHandling;
 global using Libra.Api.Common.Extensions;
+global using Libra.Api.Common.Pagination;
 global using Libra.Api.Common.Validation;
 global using Libra.Api.Contracts;
 global using Libra.Api.Domain.Models;

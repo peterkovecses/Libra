@@ -1,8 +1,32 @@
-
 @Host = https://localhost:7109
 
-### Get all books
-GET {{Host}}/api/books
+### Get books - first page
+GET {{Host}}/api/books?pageNumber=1&pageSize=10
+Accept: application/json
+
+### Get books - invalid page number (zero)
+# Expected: 400 Bad Request
+GET {{Host}}/api/books?pageNumber=0&pageSize=10
+Accept: application/json
+
+### Get books - invalid page number (negative)
+# Expected: 400 Bad Request
+GET {{Host}}/api/books?pageNumber=-1&pageSize=10
+Accept: application/json
+
+### Get books - invalid page size (zero)
+# Expected: 400 Bad Request
+GET {{Host}}/api/books?pageNumber=1&pageSize=0
+Accept: application/json
+
+### Get books - invalid page size (exceeds maximum)
+# Expected: 400 Bad Request
+GET {{Host}}/api/books?pageNumber=1&pageSize=101
+Accept: application/json
+
+### Get books - invalid page number and page size (both invalid)
+# Expected: 400 Bad Request
+GET {{Host}}/api/books?pageNumber=0&pageSize=101
 Accept: application/json
 
 ### Get book by ID - valid ID
