@@ -3,30 +3,144 @@ namespace Libra.Api.Infrastructure.Persistence;
 internal static class SqliteSeed
 {
     public const string Insert = """
-                                 INSERT OR IGNORE INTO Authors (Id, Name)
-                                 VALUES
-                                     (1, 'George Orwell'),
-                                     (2, 'J. R. R. Tolkien'),
-                                     (3, 'Frank Herbert');
+        INSERT OR IGNORE INTO Authors (Id, Name)
+        VALUES
+            (1, 'George Orwell'),
+            (2, 'J. R. R. Tolkien'),
+            (3, 'Frank Herbert'),
+            (4, 'Isaac Asimov'),
+            (5, 'Arthur C. Clarke'),
+            (6, 'Robert C. Martin'),
+            (7, 'Martin Fowler'),
+            (8, 'Andrew Hunt'),
+            (9, 'David Thomas'),
+            (10, 'Neil Gaiman'),
+            (11, 'Terry Pratchett'),
+            (12, 'Stephen King'),
+            (13, 'Peter Straub'),
+            (14, 'J. K. Rowling'),
+            (15, 'Agatha Christie'),
+            (16, 'Ray Bradbury'),
+            (17, 'Aldous Huxley'),
+            (18, 'Mary Shelley'),
+            (19, 'Herman Melville'),
+            (20, 'Dan Brown');
 
-                                 INSERT OR IGNORE INTO Books (Id, Title)
-                                 VALUES
-                                     (1, '1984'),
-                                     (2, 'Animal Farm'),
-                                     (3, 'The Hobbit'),
-                                     (4, 'Dune');
+        INSERT OR IGNORE INTO Books (Id, Title)
+        VALUES
+            (1, '1984'),
+            (2, 'Animal Farm'),
+            (3, 'The Hobbit'),
+            (4, 'The Lord of the Rings'),
+            (5, 'Dune'),
+            (6, 'Foundation'),
+            (7, 'I, Robot'),
+            (8, '2001: A Space Odyssey'),
+            (9, 'Clean Code'),
+            (10, 'Refactoring'),
+            (11, 'The Pragmatic Programmer'),
+            (12, 'Good Omens'),
+            (13, 'The Talisman'),
+            (14, 'Harry Potter and the Philosopher''s Stone'),
+            (15, 'Murder on the Orient Express'),
+            (16, 'Fahrenheit 451'),
+            (17, 'Brave New World'),
+            (18, 'Frankenstein'),
+            (19, 'Moby-Dick'),
+            (20, 'The Da Vinci Code');
 
-                                 INSERT OR IGNORE INTO BookAuthors (BookId, AuthorId)
-                                 VALUES
-                                     (1, 1),
-                                     (2, 1),
-                                     (3, 2),
-                                     (4, 3);
+        INSERT OR IGNORE INTO BookAuthors (BookId, AuthorId)
+        VALUES
+            (1, 1),
+            (2, 1),
+            (3, 2),
+            (4, 2),
+            (5, 3),
+            (6, 4),
+            (7, 4),
+            (8, 4),
+            (8, 5),
+            (9, 6),
+            (10, 7),
+            (11, 8),
+            (11, 9),
+            (12, 10),
+            (12, 11),
+            (13, 12),
+            (13, 13),
+            (14, 14),
+            (15, 15),
+            (16, 16),
+            (17, 17),
+            (18, 18),
+            (19, 19),
+            (20, 20);
 
-                                 INSERT OR IGNORE INTO Members
-                                     (Id, FirstName, LastName, Email)
-                                 VALUES
-                                     (1, 'John', 'Smith', 'john@example.com'),
-                                     (2, 'Jane', 'Doe', 'jane@example.com');
-                                 """;
+        INSERT OR IGNORE INTO BookCopies (Id, BookId)
+        VALUES
+            (1, 1),
+            (2, 1),
+            (3, 1),
+            (4, 2),
+            (5, 2),
+            (6, 3),
+            (7, 3),
+            (8, 3),
+            (9, 4),
+            (10, 4),
+            (11, 5),
+            (12, 5),
+            (13, 5),
+            (14, 6),
+            (15, 6),
+            (16, 7),
+            (17, 8),
+            (18, 8),
+            (19, 9),
+            (20, 9),
+            (21, 9),
+            (22, 10),
+            (23, 11),
+            (24, 11),
+            (25, 12),
+            (26, 12),
+            (27, 13),
+            (28, 14),
+            (29, 14),
+            (30, 14),
+            (31, 15),
+            (32, 15),
+            (33, 16),
+            (34, 17),
+            (35, 17),
+            (36, 18),
+            (37, 18),
+            (38, 19),
+            (39, 20),
+            (40, 20);
+
+        INSERT OR IGNORE INTO Members
+            (Id, FirstName, LastName, Email)
+        VALUES
+            (1, 'John', 'Smith', 'john.smith@example.com'),
+            (2, 'Jane', 'Doe', 'jane.doe@example.com'),
+            (3, 'Michael', 'Johnson', 'michael.johnson@example.com'),
+            (4, 'Emily', 'Williams', 'emily.williams@example.com'),
+            (5, 'David', 'Brown', 'david.brown@example.com'),
+            (6, 'Sarah', 'Jones', 'sarah.jones@example.com'),
+            (7, 'Robert', 'Garcia', 'robert.garcia@example.com'),
+            (8, 'Jennifer', 'Miller', 'jennifer.miller@example.com'),
+            (9, 'William', 'Davis', 'william.davis@example.com'),
+            (10, 'Elizabeth', 'Rodriguez', 'elizabeth.rodriguez@example.com'),
+            (11, 'James', 'Martinez', 'james.martinez@example.com'),
+            (12, 'Linda', 'Hernandez', 'linda.hernandez@example.com'),
+            (13, 'Richard', 'Lopez', 'richard.lopez@example.com'),
+            (14, 'Patricia', 'Wilson', 'patricia.wilson@example.com'),
+            (15, 'Thomas', 'Anderson', 'thomas.anderson@example.com'),
+            (16, 'Barbara', 'Thomas', 'barbara.thomas@example.com'),
+            (17, 'Christopher', 'Taylor', 'christopher.taylor@example.com'),
+            (18, 'Susan', 'Moore', 'susan.moore@example.com'),
+            (19, 'Daniel', 'Jackson', 'daniel.jackson@example.com'),
+            (20, 'Jessica', 'Martin', 'jessica.martin@example.com');
+        """;
 }

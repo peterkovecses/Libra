@@ -28,6 +28,15 @@ internal static class SqliteSchema
                                          ON DELETE CASCADE
                                  );
 
+                                 CREATE TABLE IF NOT EXISTS BookCopies (
+                                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                     BookId INTEGER NOT NULL,
+
+                                     FOREIGN KEY (BookId)
+                                         REFERENCES Books(Id)
+                                         ON DELETE CASCADE
+                                 );
+
                                  CREATE TABLE IF NOT EXISTS Members (
                                      Id INTEGER PRIMARY KEY AUTOINCREMENT,
                                      FirstName TEXT NOT NULL,
@@ -37,21 +46,24 @@ internal static class SqliteSchema
 
                                  CREATE TABLE IF NOT EXISTS Loans (
                                      Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                     BookId INTEGER NOT NULL,
+                                     BookCopyId INTEGER NOT NULL,
                                      MemberId INTEGER NOT NULL,
                                      BorrowedAt TEXT NOT NULL,
                                      DueDate TEXT NOT NULL,
                                      ReturnedAt TEXT,
 
-                                     FOREIGN KEY (BookId)
-                                         REFERENCES Books(Id),
+                                     FOREIGN KEY (BookCopyId)
+                                         REFERENCES BookCopies(Id),
 
                                      FOREIGN KEY (MemberId)
                                          REFERENCES Members(Id)
                                  );
 
-                                 CREATE INDEX IF NOT EXISTS IX_Loans_BookId
-                                     ON Loans(BookId);
+                                 CREATE INDEX IF NOT EXISTS IX_BookCopies_BookId
+                                     ON BookCopies(BookId);
+
+                                 CREATE INDEX IF NOT EXISTS IX_Loans_BookCopyId
+                                     ON Loans(BookCopyId);
 
                                  CREATE INDEX IF NOT EXISTS IX_Loans_MemberId
                                      ON Loans(MemberId);
