@@ -14,6 +14,8 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 
 app.UseHttpsRedirection();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.MapEndpoints();
 
 app.Run();

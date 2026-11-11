@@ -1,0 +1,149 @@
+
+/* Page header */
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.eyebrow {
+    margin: 0 0 10px;
+    color: var(--primary);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 30px;
+    letter-spacing: -1px;
+}
+
+.page-description {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.book-count {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: #667085;
+    font-size: 12px;
+}
+
+/* Books panel */
+
+.panel {
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.panel-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* Books table */
+
+.books-table-wrapper {
+    overflow-x: auto;
+}
+
+.books-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.books-table th {
+    padding: 14px 24px;
+    background: #fafbfc;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.books-table td {
+    padding: 17px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.books-table tbody tr:hover {
+    background: #fafbff;
+}
+
+.book-title {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.book-id {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.author-list {
+    color: #667085;
+}
+
+/* Loading, empty and error states */
+
+.state-message {
+    padding: 48px 24px;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+}
+
+.state-message.error {
+    color: #dc2626;
+}
+
+/* Responsive layout */
+
+@media (max-width: 768px) {
+    .page-header {
+        align-items: flex-start;
+    }
+
+    .page-header h1 {
+        font-size: 26px;
+    }
+
+    .panel-header {
+        padding: 18px;
+    }
+
+    .books-table th,
+    .books-table td {
+        padding: 14px 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-header {
+        flex-direction: column;
+    }
+
+    .book-count {
+        align-self: flex-start;
+    }
+}
