@@ -1,0 +1,16 @@
+global using System.Net;
+global using System.Net.Http.Json;
+global using Dapper;
+global using Libra.Api.Common.Pagination;
+global using Libra.Api.Contracts;
+global using Libra.Api.Domain.Models;
+global using Libra.Api.Features.Books;
+global using Libra.Api.Infrastructure.Persistence;
+global using Libra.Api.IntegrationTests.Infrastructure;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Mvc.Testing;
+global using Microsoft.Data.Sqlite;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.DependencyInjection.Extensions;
+global using Xunit;

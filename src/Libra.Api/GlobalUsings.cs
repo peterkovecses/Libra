@@ -16,5 +16,6 @@ global using System.Text.Json;
 global using Microsoft.AspNetCore.Diagnostics;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Data.Sqlite;
+global using Microsoft.Extensions.Options;
 global using Dapper;
 global using FluentValidation;

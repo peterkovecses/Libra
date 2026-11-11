@@ -1,7 +1,8 @@
 namespace Libra.Api.Infrastructure.Persistence;
 
 public sealed class DatabaseInitializer(
-    IDbConnectionFactory connectionFactory)
+    IDbConnectionFactory connectionFactory,
+    IOptions<DatabaseInitializationOptions> options)
 {
     public async Task InitializeAsync(
         CancellationToken cancellationToken = default)
@@ -30,6 +31,11 @@ public sealed class DatabaseInitializer(
             }
 
             await schemaTransaction.CommitAsync(cancellationToken);
+        }
+
+        if (!options.Value.SeedDemoData)
+        {
+            return;
         }
 
         await using var transaction =

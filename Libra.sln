@@ -6,6 +6,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libra.Api.UnitTests", "tests\Libra.Api.UnitTests\Libra.Api.UnitTests.csproj", "{380A7309-D281-4C58-ADB7-3AC83D906E38}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Libra.Api.IntegrationTests", "tests\Libra.Api.IntegrationTests\Libra.Api.IntegrationTests.csproj", "{00BDDDD0-A91D-4013-9D5D-1457A9030771}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,11 +42,24 @@ Global
 		{380A7309-D281-4C58-ADB7-3AC83D906E38}.Release|x64.Build.0 = Release|Any CPU
 		{380A7309-D281-4C58-ADB7-3AC83D906E38}.Release|x86.ActiveCfg = Release|Any CPU
 		{380A7309-D281-4C58-ADB7-3AC83D906E38}.Release|x86.Build.0 = Release|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Debug|x64.Build.0 = Debug|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Debug|x86.Build.0 = Debug|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Release|x64.ActiveCfg = Release|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Release|x64.Build.0 = Release|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Release|x86.ActiveCfg = Release|Any CPU
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{380A7309-D281-4C58-ADB7-3AC83D906E38} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{00BDDDD0-A91D-4013-9D5D-1457A9030771} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
