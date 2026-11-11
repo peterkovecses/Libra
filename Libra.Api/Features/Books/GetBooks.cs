@@ -53,7 +53,7 @@ public sealed class GetBooksHandler(IDbConnectionFactory connectionFactory)
         ),
         PagedBooks AS
         (
-            SELECT Id, Title
+            SELECT Id, Title, Version
             FROM Books
             ORDER BY Title, Id
             LIMIT @PageSize OFFSET @Offset
@@ -62,13 +62,14 @@ public sealed class GetBooksHandler(IDbConnectionFactory connectionFactory)
             c.TotalCount,
             b.Id,
             b.Title,
+            CAST(b.Version AS TEXT) AS Version,
             a.Id,
             a.Name
         FROM BookCount c
         LEFT JOIN PagedBooks b ON 1 = 1
         LEFT JOIN BookAuthors ba ON ba.BookId = b.Id
         LEFT JOIN Authors a ON a.Id = ba.AuthorId
-        ORDER BY b.Title, b.Id, a.Name;
+        ORDER BY b.Title, b.Id, a.Name, a.Id;
         """;
 
     private static async Task<PaginatedList<Book>> GetBooksAsync(

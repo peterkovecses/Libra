@@ -11,6 +11,8 @@ global using Libra.Api.Infrastructure.Persistence;
 global using Libra.Api.Infrastructure.Persistence.Extensions;
 global using System.Data;
 global using System.Data.Common;
+global using System.Globalization;
+global using System.Text.Json;
 global using Microsoft.AspNetCore.Diagnostics;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Data.Sqlite;

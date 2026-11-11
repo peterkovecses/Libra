@@ -6,6 +6,8 @@ public static class DependencyInjection
     {
         services.AddScoped<GetBooksHandler>();
         services.AddScoped<GetBookByIdHandler>();
+        services.AddScoped<UpdateBookHandler>();
+        services.AddScoped<GetAuthorsHandler>();
         
         services.AddValidatorsFromAssemblyContaining<Program>();
         

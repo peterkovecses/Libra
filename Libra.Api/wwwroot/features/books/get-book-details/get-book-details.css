@@ -65,6 +65,7 @@
 .panel-actions {
     display: flex;
     justify-content: flex-end;
+    gap: 8px;
     padding: 16px 24px;
     border-top: 1px solid var(--border);
 }
@@ -73,7 +74,7 @@
     display: none;
 }
 
-#edit-book-button {
+#edit-book-button, #cancel-book-button, .book-edit-author button, #book-edit-error button {
     padding: 9px 20px;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -85,9 +86,27 @@
     cursor: pointer;
 }
 
-#edit-book-button:hover {
+#edit-book-button:hover, #cancel-book-button:hover {
     background: var(--background);
 }
+
+#book-edit-error {
+    padding: 0 24px 16px;
+    color: #b91c1c;
+    font-size: 13px;
+}
+
+#book-edit-error[hidden] { display: none; }
+#book-edit-error button { display: block; margin-top: 8px; }
+.book-edit-author { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.book-details input, .book-details select {
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font: inherit;
+}
+button:disabled, input:disabled, select:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Responsive layout */
 

@@ -6,8 +6,8 @@ export class HttpError extends Error {
     }
 }
 
-export async function fetchResponse(url) {
-    const response = await fetch(url);
+export async function fetchResponse(url, options) {
+    const response = await fetch(url, options);
 
     if (!response.ok) {
         throw new HttpError(response);

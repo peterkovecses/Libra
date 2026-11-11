@@ -9,6 +9,8 @@ public static class EndpointExtensions
 
         GetBooksEndpoint.MapEndpoint(bookGroup);
         GetBookByIdEndpoint.MapEndpoint(bookGroup);
+        UpdateBookEndpoint.MapEndpoint(bookGroup);
+        GetAuthorsEndpoint.MapEndpoint(app.MapGroup("api").WithTags("Author"));
         
         return app;
     }

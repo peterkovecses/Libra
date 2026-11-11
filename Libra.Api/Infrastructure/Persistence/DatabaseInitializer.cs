@@ -14,6 +14,24 @@ public sealed class DatabaseInitializer(
                 SqliteSchema.Create,
                 cancellationToken: cancellationToken));
 
+        await using (var schemaTransaction = await connection.BeginTransactionAsync(cancellationToken))
+        {
+            var columns = await connection.QueryAsync<string>(
+                new CommandDefinition(
+                    "SELECT name FROM pragma_table_info('Books');",
+                    transaction: schemaTransaction,
+                    cancellationToken: cancellationToken));
+            if (!columns.Contains("Version", StringComparer.OrdinalIgnoreCase))
+            {
+                await connection.ExecuteAsync(new CommandDefinition(
+                    "ALTER TABLE Books ADD COLUMN Version INTEGER NOT NULL DEFAULT 1;",
+                    transaction: schemaTransaction,
+                    cancellationToken: cancellationToken));
+            }
+
+            await schemaTransaction.CommitAsync(cancellationToken);
+        }
+
         await using var transaction =
             await connection.BeginTransactionAsync(cancellationToken);
 

@@ -20,6 +20,13 @@ class Element {
     dispatch(name) { this.listeners[name]?.({ target: this, key: "", preventDefault() {} }); }
     remove() { this.removed = true; }
     querySelector(selector) { return this.elements?.[selector]; }
+    querySelectorAll(selector) {
+        const tags = selector.split(",").map(tag => tag.trim());
+        return this.children.flatMap(child => [
+            ...(tags.includes(child.tag) ? [child] : []),
+            ...child.querySelectorAll(selector)
+        ]);
+    }
     set innerHTML(html) {
         this.html = html;
         this.elements = html === "books"
@@ -30,7 +37,10 @@ class Element {
             }
             : {
                 "#book-details-container": new Element(),
-                ".panel-actions": Object.assign(new Element(), { hidden: true })
+                ".panel-actions": Object.assign(new Element(), { hidden: true }),
+                "#edit-book-button": new Element("button"),
+                "#cancel-book-button": new Element("button"),
+                "#book-edit-error": new Element()
             };
     }
 }
@@ -52,7 +62,7 @@ const { loadStylesheet, removeFeatureStylesheet } =
 const booksFeature = await import("../Libra.Api/wwwroot/features/books/get-books/get-books.js");
 const detailsFeature = await import("../Libra.Api/wwwroot/features/books/get-book-details/get-book-details.js");
 
-const book = { id: 1, title: "A book", authors: [{ id: 2, name: "An author" }] };
+const book = { id: 1, title: "A book", version: "1", authors: [{ id: 2, name: "An author" }] };
 const page = (pageNumber, pageSize = 10) => ({
     items: [book], totalCount: 20, pageNumber, pageSize,
     totalPages: Math.ceil(20 / pageSize),
@@ -235,6 +245,59 @@ test("book details distinguish 404, malformed success, and valid success", async
         await detailsFeature.load(container, () => true, { bookId: 1 });
         assert.equal(container.querySelector("#book-details-container").children[0].className, "book-details");
         assert.equal(container.querySelector(".panel-actions").hidden, false);
+    } finally {
+        console.error = originalError;
+    }
+});
+
+test("editing loads every authors page, saves the draft and retains it on conflict", async () => {
+    let updateStatus = 409;
+    const requests = [];
+    globalThis.fetch = async (url, options) => {
+        if (url instanceof URL) return response(200, "details");
+        requests.push({ url, options });
+        if (url.startsWith("/api/authors")) {
+            const pageNumber = Number(new URL(url, "https://example.test").searchParams.get("pageNumber"));
+            const items = pageNumber === 1
+                ? Array.from({ length: 100 }, (_, i) => ({ id: i + 2, name: `Author ${i + 2}` }))
+                : [{ id: 102, name: "Last author" }];
+            return response(200, { items, totalCount: 101, pageNumber, pageSize: 100, totalPages: 2, hasNextPage: pageNumber === 1 });
+        }
+        if (options?.method === "PUT") {
+            return response(updateStatus, { ...book, title: "Changed", version: "2", authors: [{ id: 102, name: "Last author" }] });
+        }
+        return response(200, book);
+    };
+    const originalError = console.error;
+    console.error = () => {};
+    try {
+        const container = new Element();
+        await detailsFeature.load(container, () => true, { bookId: 1 });
+        const edit = container.querySelector("#edit-book-button");
+        const details = container.querySelector("#book-details-container");
+        const errorBox = container.querySelector("#book-edit-error");
+        edit.dispatch("click");
+        await wait();
+        assert.equal(requests.filter(request => request.url.startsWith("/api/authors")).length, 2);
+        const draft = details.children[0];
+        draft.children[1].value = "Changed";
+        draft.children[1].dispatch("input");
+        draft.children[3].children[0].children[1].dispatch("click");
+        const select = details.children[0].children[3].children[0];
+        select.value = "102";
+        select.dispatch("change");
+        edit.dispatch("click");
+        await wait();
+        assert.deepEqual(JSON.parse(requests.at(-1).options.body), {
+            title: "Changed", authorIds: [102], version: "1"
+        });
+        assert.match(errorBox.children[0].textContent, /changed elsewhere/);
+        assert.equal(details.children[0].children[1].value, "Changed");
+        updateStatus = 200;
+        edit.dispatch("click");
+        await wait();
+        assert.equal(edit.textContent, "Edit");
+        assert.equal(details.children[0].children[3].textContent, "Changed");
     } finally {
         console.error = originalError;
     }

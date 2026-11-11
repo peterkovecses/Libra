@@ -5,7 +5,8 @@ internal static class SqliteSchema
     public const string Create = """
                                  CREATE TABLE IF NOT EXISTS Books (
                                      Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                     Title TEXT NOT NULL
+                                     Title TEXT NOT NULL,
+                                     Version INTEGER NOT NULL DEFAULT 1
                                  );
 
                                  CREATE TABLE IF NOT EXISTS Authors (
