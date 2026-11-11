@@ -9,7 +9,7 @@ riderModule.iml
 *.code-workspace
 
 # Local SQLite database and journal files
-/Libra.Api/App_Data/libra.db
-/Libra.Api/App_Data/libra.db-journal
-/Libra.Api/App_Data/libra.db-shm
-/Libra.Api/App_Data/libra.db-wal
+/src/Libra.Api/App_Data/libra.db
+/src/Libra.Api/App_Data/libra.db-journal
+/src/Libra.Api/App_Data/libra.db-shm
+/src/Libra.Api/App_Data/libra.db-wal
