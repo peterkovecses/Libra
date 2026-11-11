@@ -16,7 +16,10 @@ public static class UpdateBookEndpoint
     {
         if (id <= 0)
         {
-            return Results.ValidationProblem(new Dictionary<string, string[]> { ["Id"] = ["Id must be greater than 0."] });
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["Id"] = ["Id must be greater than 0."]
+            });
         }
 
         var result = await handler.HandleAsync(id, request, cancellationToken);
@@ -39,50 +42,101 @@ public sealed class UpdateBookHandler(IDbConnectionFactory connectionFactory)
 {
     public async Task<UpdateBookResult> HandleAsync(int id, UpdateBookRequest request, CancellationToken cancellationToken)
     {
-        var version = long.Parse(request.Version!, CultureInfo.InvariantCulture);
-        var authorIds = request.AuthorIds!;
+        var version = long.Parse(request.Version, CultureInfo.InvariantCulture);
         await using var connection = await connectionFactory.OpenConnectionAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+        var updated = await UpdateTitleAsync(connection, transaction, id, request.Title, version, cancellationToken);
+        if (!updated)
+        {
+            return await GetUpdateFailureAsync(connection, transaction, id, version, cancellationToken);
+        }
+
+        var invalidAuthorIds = await FindInvalidAuthorsAsync(connection, transaction, request.AuthorIds, cancellationToken);
+        if (invalidAuthorIds.Length > 0)
+        {
+            return new InvalidAuthors(invalidAuthorIds);
+        }
+
+        await SyncAuthorsAsync(connection, transaction, id, request.AuthorIds, cancellationToken);
+        var book = await ReadUpdatedBookAsync(connection, transaction, id, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return new UpdatedBook(book);
+    }
+
+    private static async Task<bool> UpdateTitleAsync(
+        DbConnection connection, DbTransaction transaction, int id, string title, long version,
+        CancellationToken cancellationToken)
+    {
         var changed = await connection.ExecuteAsync(new CommandDefinition(
             """
             UPDATE Books SET Title = @Title, Version = Version + 1
             WHERE Id = @Id AND Version = @Version AND Version < 9223372036854775807;
             """,
-            new { Id = id, request.Title, Version = version }, transaction, cancellationToken: cancellationToken));
-        if (changed == 0)
+            new { Id = id, Title = title, Version = version }, transaction, cancellationToken: cancellationToken));
+
+        return changed == 1;
+    }
+
+    private static async Task<UpdateBookResult> GetUpdateFailureAsync(
+        DbConnection connection, DbTransaction transaction, int id, long version,
+        CancellationToken cancellationToken)
+    {
+        var currentVersion = await connection.QuerySingleOrDefaultAsync<long?>(new CommandDefinition(
+            "SELECT Version FROM Books WHERE Id = @Id;",
+            new { Id = id }, transaction, cancellationToken: cancellationToken));
+
+        if (currentVersion is null)
         {
-            var current = await connection.QuerySingleOrDefaultAsync<long?>(new CommandDefinition(
-                "SELECT Version FROM Books WHERE Id = @Id;", new { Id = id }, transaction, cancellationToken: cancellationToken));
-            if (current is null) return new BookNotFound();
-            if (current == long.MaxValue && current == version)
-                throw new InvalidOperationException("Book version has reached its maximum value.");
-            return new BookConflict();
+            return new BookNotFound();
         }
 
+        if (currentVersion == long.MaxValue && currentVersion == version)
+        {
+            throw new InvalidOperationException("Book version has reached its maximum value.");
+        }
+
+        return new BookConflict();
+    }
+
+    private static async Task<int[]> FindInvalidAuthorsAsync(
+        DbConnection connection, DbTransaction transaction, int[] authorIds, CancellationToken cancellationToken)
+    {
         var existingAuthors = (await connection.QueryAsync<int>(new CommandDefinition(
             "SELECT Id FROM Authors WHERE Id IN (SELECT value FROM json_each(@Ids));",
             new { Ids = JsonSerializer.Serialize(authorIds) }, transaction,
             cancellationToken: cancellationToken))).ToHashSet();
-        var invalidIds = authorIds.Where(authorId => !existingAuthors.Contains(authorId)).ToArray();
-        if (invalidIds.Length != 0) return new InvalidAuthors(invalidIds);
 
-        var linked = (await connection.QueryAsync<int>(new CommandDefinition(
-            "SELECT AuthorId FROM BookAuthors WHERE BookId = @Id;", new { Id = id }, transaction,
+        return [.. authorIds.Where(authorId => !existingAuthors.Contains(authorId))];
+    }
+
+    private static async Task SyncAuthorsAsync(
+        DbConnection connection, DbTransaction transaction, int bookId, int[] authorIds,
+        CancellationToken cancellationToken)
+    {
+        var linkedAuthorIds = (await connection.QueryAsync<int>(new CommandDefinition(
+            "SELECT AuthorId FROM BookAuthors WHERE BookId = @Id;", new { Id = bookId }, transaction,
             cancellationToken: cancellationToken))).ToHashSet();
-        foreach (var removed in linked.Except(authorIds))
+
+        foreach (var removedId in linkedAuthorIds.Except(authorIds))
         {
             await connection.ExecuteAsync(new CommandDefinition(
                 "DELETE FROM BookAuthors WHERE BookId = @Id AND AuthorId = @AuthorId;",
-                new { Id = id, AuthorId = removed }, transaction, cancellationToken: cancellationToken));
+                new { Id = bookId, AuthorId = removedId }, transaction, cancellationToken: cancellationToken));
         }
 
-        foreach (var added in authorIds.Except(linked))
+        foreach (var addedId in authorIds.Except(linkedAuthorIds))
         {
             await connection.ExecuteAsync(new CommandDefinition(
                 "INSERT INTO BookAuthors (BookId, AuthorId) VALUES (@Id, @AuthorId);",
-                new { Id = id, AuthorId = added }, transaction, cancellationToken: cancellationToken));
+                new { Id = bookId, AuthorId = addedId }, transaction, cancellationToken: cancellationToken));
         }
+    }
 
+    private static async Task<Book> ReadUpdatedBookAsync(
+        DbConnection connection, DbTransaction transaction, int id, CancellationToken cancellationToken)
+    {
         var books = await connection.QueryWithChildrenAsync<Book, Author, int>(
             new CommandDefinition(
                 """
@@ -93,14 +147,12 @@ public sealed class UpdateBookHandler(IDbConnectionFactory connectionFactory)
                 WHERE b.Id = @Id ORDER BY a.Name, a.Id;
                 """, new { Id = id }, transaction, cancellationToken: cancellationToken),
             b => b.Id, (book, author) => book.Authors.Add(author));
-        var updated = books.Single();
-        await transaction.CommitAsync(cancellationToken);
-        
-        return new UpdatedBook(updated);
+
+        return books.Single();
     }
 }
 
-public record UpdateBookRequest(string? Title, int[]? AuthorIds, string? Version);
+public record UpdateBookRequest(string Title, int[] AuthorIds, string Version);
 public record UpdatedBook(Book Book);
 public record BookNotFound;
 public record BookConflict;
