@@ -1,5 +1,6 @@
 
 import { createPagination } from "../../../js/components/pagination/pagination.js";
+import { createSearchSort } from "../../../js/components/search-sort/search-sort.js";
 import { fetchResponse, renderError, renderState } from "../../../js/http.js";
 import { loadStylesheet } from "../../../js/stylesheet.js";
 import { validateBooksPage } from "../common/validation/book-validation.js";
@@ -38,7 +39,11 @@ export async function load(container, isCurrent = () => true) {
     const bookCount = container.querySelector("#book-count");
 
     const requestState = {
-        currentRequestId: 0
+        currentRequestId: 0,
+        pageSize: DEFAULT_PAGE_SIZE,
+        search: "",
+        sortBy: "title",
+        sortDirection: "asc"
     };
 
     const pagination = await createPagination(
@@ -52,6 +57,7 @@ export async function load(container, isCurrent = () => true) {
             hasNextPage: false,
 
             onPageChange: ({ pageNumber, pageSize }) => {
+                requestState.pageSize = pageSize;
                 loadBooks(
                     booksContainer,
                     bookCount,
@@ -64,6 +70,38 @@ export async function load(container, isCurrent = () => true) {
             }
         }
     );
+
+    if (!isCurrent()) {
+        pagination.destroy();
+        return;
+    }
+
+    await createSearchSort(container.querySelector("#book-filters"), {
+        searchLabel: "Search books",
+        searchPlaceholder: "Title or author",
+        maxLength: 200,
+        sortOptions: [
+            { value: "title:asc", label: "Title (ascending)" },
+            { value: "title:desc", label: "Title (descending)" },
+            { value: "id:asc", label: "ID (ascending)" },
+            { value: "id:desc", label: "ID (descending)" }
+        ],
+        isCurrent,
+        onPending: () => {
+            requestState.currentRequestId++;
+            pagination.update({ loading: true });
+            bookCount.textContent = "Loading...";
+            renderState(booksContainer, "Loading books...");
+        },
+        onChange: ({ search, sort }) => {
+            requestState.search = search;
+            [requestState.sortBy, requestState.sortDirection] = sort.split(":");
+            loadBooks(
+                booksContainer, bookCount, pagination, requestState,
+                isCurrent, DEFAULT_PAGE_NUMBER, requestState.pageSize
+            );
+        }
+    });
 
     if (!isCurrent()) {
         pagination.destroy();
@@ -98,7 +136,10 @@ async function loadBooks(
     try {
         const params = new URLSearchParams({
             pageNumber: pageNumber.toString(),
-            pageSize: pageSize.toString()
+            pageSize: pageSize.toString(),
+            search: requestState.search,
+            sortBy: requestState.sortBy,
+            sortDirection: requestState.sortDirection
         });
 
         const response = await fetchResponse(`/api/books?${params}`);
@@ -115,7 +156,7 @@ async function loadBooks(
             );
         }
 
-        renderBooks(data, booksContainer, bookCount);
+        renderBooks(data, booksContainer, bookCount, requestState.search);
 
         pagination.update({ ...data, loading: false });
     } catch (error) {
@@ -136,7 +177,7 @@ async function loadBooks(
     }
 }
 
-function renderBooks(data, container, bookCount) {
+function renderBooks(data, container, bookCount, search) {
     const { items, totalCount } = data;
 
     bookCount.textContent = `${totalCount} books`;
@@ -144,7 +185,7 @@ function renderBooks(data, container, bookCount) {
     if (items.length === 0) {
         renderState(
             container,
-            "No books found in the library."
+            search ? "No books match your search." : "No books found in the library."
         );
 
         return;

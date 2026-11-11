@@ -4,6 +4,10 @@
 GET {{Host}}/api/books?pageNumber=1&pageSize=10
 Accept: application/json
 
+### Search title or author and sort by title descending
+GET {{Host}}/api/books?pageNumber=1&pageSize=10&search=orwell&sortBy=title&sortDirection=desc
+Accept: application/json
+
 ### Get books - invalid page number (zero)
 # Expected: 400 Bad Request
 GET {{Host}}/api/books?pageNumber=0&pageSize=10

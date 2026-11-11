@@ -1,0 +1,36 @@
+.search-sort {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.search-sort label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 100%;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.search-sort .search-sort-order {
+    margin-left: auto;
+}
+
+.search-sort input,
+.search-sort select {
+    min-height: 36px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+}
+
+.search-sort input {
+    box-sizing: border-box;
+    width: min(320px, 100%);
+}

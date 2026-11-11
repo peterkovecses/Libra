@@ -31,3 +31,13 @@ dotnet run --project src/Libra.Api --launch-profile https
 ```
 
 The API host also serves the frontend at [https://localhost:7109](https://localhost:7109).
+
+## Book list
+
+`GET /api/books` requires `pageNumber` and `pageSize` (1–100). Optional
+`search` (up to 200 characters) matches a literal substring of a book's title or any author's name,
+after trimming surrounding whitespace; SQLite's built-in case folding is
+case-insensitive for ASCII characters. `sortBy` is `title` (default) or `id`,
+and `sortDirection` is `asc` (default) or `desc`. Title sorting ignores case
+for ASCII characters; ties are ordered by ascending ID. The total count and
+pages reflect the same search.
