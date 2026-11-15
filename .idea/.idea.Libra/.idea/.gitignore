@@ -1,0 +1,27 @@
+
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# Rider ignored files
+/contentModel.xml
+/.idea.Libra.iml
+/modules.xml
+/projectSettingsUpdater.xml
+
+# Editor-based HTTP Client requests
+/httpRequests/
+
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+# Visual Studio Code
+/.vscode/*
+!/.vscode/extensions.json
+!/.vscode/settings.json
+!/.vscode/tasks.json
+!/.vscode/launch.json
+
+# VS Code workspace files
+*.code-workspace
